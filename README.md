@@ -4,7 +4,7 @@ This is the GUI for SealNet.
 
 # Prerequisite
 
-1. You need Python version 3.8 and above. Check if you have Python/your current version of python by running `python3 -V`. If you don't have Python 3.8 or above, you can download Python 3.9 from here: https://www.python.org/downloads/
+1. You need Python version 3.8 and above. Check if you have Python/your current version of python by running `python3 -V`. If you don't have Python 3.8 or above, you can download Python 3.9 from here: https://www.python.org/downloads/. Then install python3.9-tk with `brew install python-tk@3.9`
 
 2. You must have used the face recognition model in https://github.com/zbirenbaum/SealFaceRecognition and download the result.json file and move it to the folder here.
 
