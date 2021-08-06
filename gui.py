@@ -1,17 +1,18 @@
 import tkinter
 # Lots of tutorials have from tkinter import *, but that is pretty much always a bad idea
 from tkinter import ttk
-from PIL import Image, ImageTk
+from PIL import ImageTk
 import json
 import abc
 import os
 
 class Menubar(ttk.Frame):
     """Builds a menu bar for the top of the main window"""
-    def __init__(self, parent, *args, **kwargs):
+    def __init__(self, parent, gui, *args, **kwargs):
         ''' Constructor'''
         ttk.Frame.__init__(self, parent, *args, **kwargs)
         self.root = parent
+        self.gui = gui
         self.init_menubar()
 
     def on_exit(self):
@@ -21,14 +22,21 @@ class Menubar(ttk.Frame):
     def display_help(self):
         self.new_win = tkinter.Toplevel(self.root) # Set parent
         HelpWindow(self.new_win)
+        
+    def on_save(self):
+        with open('./match.txt', 'w') as match:
+            for probe, predictions in self.gui.prediction.items():
+                prediction = "" if predictions is None else predictions[1]
+                match.write(probe + ' ' + prediction + '\n')
 
     def init_menubar(self):
         self.menubar = tkinter.Menu(self.root)
         
         self.menu_file = tkinter.Menu(self.menubar) # Creates a "File" menu
         self.menu_file.add_command(label='Exit', command=self.on_exit) # Adds an option to the menu
+        self.menu_file.add_command(label='Save', command=self.on_save) 
         self.menubar.add_cascade(menu=self.menu_file, label='File') # Adds File menu to the bar. Can also be used to create submenus.
-
+        
         self.menu_help = tkinter.Menu(self.menubar) #Creates a "Help" menu
         self.menu_help.add_command(label='Help', command=self.display_help)
         self.menubar.add_cascade(menu=self.menu_help, label='Help')
@@ -84,6 +92,9 @@ class GUI(ttk.Frame):
         self.root = parent
         self.data = json.load(open('result.json'))
         self.probelabel = list(self.data.keys()) # contains all probe images
+        self.prediction = {}
+        for label in self.probelabel:
+            self.prediction[label] = None
         self.current = 0
         self.maxPhotos = 5
         self.rank = 5       
@@ -92,16 +103,23 @@ class GUI(ttk.Frame):
 
     def init_gui(self):
         self.root.title('SealNet')
-        self.root.geometry("1100x900")
+        self.root.geometry("1300x900")
         self.grid(column=0, row=0, sticky='nsew')
         self.root.grid_columnconfigure(0, weight=1)
         self.root.grid_rowconfigure(0, weight=1)
         self.root.option_add('*tearOff', 'FALSE') # Disables ability to tear menu bar into own window
         
+        # different button styles
+        self.style = ttk.Style()
+        self.style.configure('TButton', foreground = 'black', borderwidth=1, focusthickness=3, focuscolor='none')
+        self.style.configure("Selected.TButton", foreground="green")
+        self.style.configure("Unselected.TButton", foreground="black")
+        self.style.configure("NoMatch.TButton", foreground="red")
+        
         # Menu Bar
-        self.menubar = Menubar(self.root)
+        self.menubar = Menubar(self.root, self)
 
-        # Button Bar
+        # Button Bar: for Previous and Next
         self.buttonBar = ttk.Frame(self)
         self.buttonBar.grid(row=0, column=0, pady=15)
 
@@ -118,7 +136,8 @@ class GUI(ttk.Frame):
 
         # Add Probe and Label title
         ttk.Label(self.mainFrame, text="Probe", font=('Arial', 25)).grid(row=0, column=0)
-        ttk.Label(self.mainFrame, text="Label", font=('Arial', 25)).grid(row=0, column=1, columnspan=3+self.maxPhotos)
+        ttk.Label(self.mainFrame, text="Prediction", font=('Arial', 25)).grid(row=0, column=1, columnspan=3+self.maxPhotos)
+        self.mainFrameDict = {}
         # Add Probe Frame
         probeFrame = tkinter.Frame(self.mainFrame, highlightbackground="black", highlightthickness=1)
         probeFrame.grid(row=1, column=0, padx=15, pady=15)
@@ -131,16 +150,32 @@ class GUI(ttk.Frame):
         galleryFrame.grid(row=1, column=1, pady=15, ipadx=15, ipady=15)
         self.galleryFrameDict = {}
         for i in range(self.rank):
+            # Add Rank, Score, and Label
             self.galleryFrameDict[(2*i, 0)] = ttk.Label(galleryFrame, text='Rank {}'.format(i+1))
             self.galleryFrameDict[(2*i, 0)].grid(row=2*i, column=0, rowspan=2, padx=(15,0))
             self.galleryFrameDict[(2*i, 1)] = ttk.Label(galleryFrame, text='Score: ')
             self.galleryFrameDict[(2*i, 1)].grid(row=2*i, column=1, rowspan=2, padx=15)
             self.galleryFrameDict[(2*i, 2)] = ttk.Label(galleryFrame, text='')
             self.galleryFrameDict[(2*i, 2)].grid(row=2*i, column=2, columnspan=self.maxPhotos)
+            
+            # Add example photos for each rank
             for j in range(self.maxPhotos):
                 self.galleryFrameDict[(2*i+1,j+2)] = ttk.Label(galleryFrame, image=None)
                 self.galleryFrameDict[(2*i+1,j+2)].grid(row=2*i+1, column=j+2, padx=5, pady=5)
-                
+            
+            # Add Check Button for each rank
+            self.galleryFrameDict[(2*i, self.maxPhotos+2)] = ttk.Button(galleryFrame, text="Check", style="Unselected.TButton", command= lambda c=i: self.match(c))
+            self.galleryFrameDict[(2*i, self.maxPhotos+2)].grid(row=2*i, column=self.maxPhotos+2, rowspan=2, padx=(15, 0))
+        
+        # Add No-Match Button
+        noMatchButtonFrame = ttk.Frame(self.mainFrame)
+        noMatchButtonFrame.grid(row=1, column=2, rowspan=self.rank)
+        self.mainFrameDict["noMatchButton"] = ttk.Button(noMatchButtonFrame, text="No Match", style="Unselected.TButton", command=self.no_match)
+        self.mainFrameDict["noMatchButton"].grid(row=0, column=0, padx=15)
+        
+        self.mainFrameDict["gallery"] = galleryFrame
+        self.mainFrameDict["probe"] = probeFrame
+        
         # Check if there is no probe
         if (len(self.probelabel) > 0):
             self.loadCurrentImage()
@@ -181,6 +216,18 @@ class GUI(ttk.Frame):
             for j in range(len(curRankPred[i])):
                 self.galleryFrameDict[(2*i+1,j+2)].configure(image=curRankPred[i][j])
                 self.galleryFrameDict[(2*i+1,j+2)].image = curRankPred[i][j]
+                
+            # Load Buttons    
+            if (self.prediction[curProbe] is not None and self.prediction[curProbe][0] == i):
+                self.galleryFrameDict[(2*i, self.maxPhotos+2)].configure(style="Selected.TButton")
+            else:
+                self.galleryFrameDict[(2*i, self.maxPhotos+2)].configure(style="Unselected.TButton")
+            
+        if (self.prediction[curProbe] is not None and self.prediction[curProbe][0] == -1):
+            self.mainFrameDict["noMatchButton"].configure(style="NoMatch.TButton")
+        else:
+            self.mainFrameDict["noMatchButton"].configure(style="Unselected.TButton")
+            
     
     # Iterate through next image
     def next(self):
@@ -193,6 +240,38 @@ class GUI(ttk.Frame):
         if (self.current > 0):
             self.current -= 1
             self.loadCurrentImage()
+    
+    # Match probe to the chosen gallery        
+    def match(self, index):
+        currentProbe = self.probelabel[self.current]
+        prevIndex, match = -1, None
+        if (self.prediction[currentProbe] != None):
+            prevIndex = self.prediction[currentProbe][0]
+            if (prevIndex == -1):
+                self.mainFrameDict["noMatchButton"].configure(style="Unselected.TButton")
+            else:
+                self.galleryFrameDict[(2*prevIndex, self.maxPhotos+2)].configure(style="Unselected.TButton")
+        if (prevIndex != index):
+            match = self.data[currentProbe]['scores'][index][0]
+            self.prediction[currentProbe] = (index, match)
+            self.galleryFrameDict[(2*index, self.maxPhotos+2)].configure(style="Selected.TButton")
+        else:
+            self.prediction[currentProbe] = None
+    
+    # Specify that this probe has no match
+    def no_match(self):
+        currentProbe = self.probelabel[self.current]
+        if self.prediction[currentProbe] == None:
+            self.prediction[currentProbe] = (-1, "NoMatch")
+            self.mainFrameDict["noMatchButton"].configure(style="NoMatch.TButton")
+        elif self.prediction[currentProbe][0] >= 0:
+            prevIndex = self.prediction[currentProbe][0]
+            self.galleryFrameDict[(2*prevIndex, self.maxPhotos+2)].configure(style="Unselected.TButton")
+            self.prediction[currentProbe] = (-1, "NoMatch")
+            self.mainFrameDict["noMatchButton"].configure(style="NoMatch.TButton")
+        else:
+            self.prediction[currentProbe] = None
+            self.mainFrameDict["noMatchButton"].configure(style="Unselected.TButton")
 
 if __name__ == '__main__':
     root = tkinter.Tk()
