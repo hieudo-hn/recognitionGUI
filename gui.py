@@ -179,7 +179,7 @@ class GUI(ttk.Frame):
     def __init__(self, parent, *args, **kwargs):
         ttk.Frame.__init__(self, parent, *args, **kwargs)
         self.root = parent
-        self.data = json.load(open('result.json'))
+        self.data = json.load(open(original_result_file))
         self.probelabel = list(self.data.keys())  # contains all probe images
         self.prediction = {}
         for label in self.probelabel:
@@ -400,7 +400,7 @@ class GUI(ttk.Frame):
 
 if __name__ == '__main__':
     root = tkinter.Tk()
-    if (os.path.exists('result.json')):
+    if (os.path.exists(original_result_file)):
         GUI(root)
     else:
         HelpWindow(root)
