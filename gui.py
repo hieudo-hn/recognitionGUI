@@ -41,7 +41,7 @@ class Menubar(ttk.Frame):
         # Check for potential naming error
         for probe, predictions in self.gui.prediction.items():
             if predictions[1] == NO_MATCH:
-                label = probe[probe.rindex('/') + 1:]
+                label = probe[probe.rfind('/') + 1:]
                 destination = os.path.join(galleryDir, label)
                 # Prediction is no_match but have a seal with the same name in gallery
                 if (os.path.exists(destination)):
@@ -55,7 +55,7 @@ class Menubar(ttk.Frame):
             if prediction == "":
                 continue
             elif prediction == NO_MATCH:
-                label = probe[probe.rindex('/') + 1:]
+                label = probe[probe.rfind('/') + 1:]
                 prediction = os.path.join(galleryDir, label)
                 os.makedirs(prediction)               
             for photo in os.listdir(probe):
@@ -152,8 +152,8 @@ class SummaryWindow(Window):
         
         mylist = tkinter.Listbox(self.parent, yscrollcommand=verticalScrollbar.set, bd=1, height=10, width=200)
         for probe, predictions in kwargs['data']:
-            probe = probe[probe.rindex('/')+1:]
-            prediction = "" if predictions is None else predictions[1][predictions[1].rindex('/') + 1:]
+            probe = probe[probe.rfind('/')+1:]
+            prediction = "" if predictions is None else predictions[1][predictions[1].rfind('/') + 1:]
             if prediction == NO_MATCH:
                 mylist.insert(tkinter.END, str(probe) + " does not have a match")
             else:
@@ -304,7 +304,7 @@ class GUI(ttk.Frame):
         curProbe = self.probelabel[self.current]
         # Display the new probe names
         self.buttonBarDict[(0, 1)].configure(
-            text=curProbe[curProbe.rindex('/')+1:])
+            text=curProbe[curProbe.rfind('/')+1:])
 
         # Loading Probes
         probeImages = self.getPhotosFromDir(curProbe)
@@ -322,7 +322,7 @@ class GUI(ttk.Frame):
             curRankPred[i] = [ImageTk.PhotoImage(
                 file=image) for image in galImages]
             self.galleryFrameDict[(
-                2*i, 2)].configure(text=curGal[curGal.rindex('/')+1:])
+                2*i, 2)].configure(text=curGal[curGal.rfind('/')+1:])
             self.galleryFrameDict[(
                 2*i, 1)].configure(text='Score: {:.3f}'.format(curGalScore))
             for j in range(len(curRankPred[i])):
