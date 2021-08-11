@@ -31,14 +31,15 @@ mkdir data/probe
 # Display the GUI
 
 1. Assess this repository from the terminal by running `cd ~/Desktop/recognitionGUI`, then run `git pull` to pull any software updates.
-2. [Ignore this step if your photos are already in their respective data folder]
+2. Run `source ./py39/bin/activate` to activate the virtual environment
+3. [Ignore this step if your photos are already in their respective data folder]
 Your probe photos should be in ./data/probe and your gallery (database) should be in ./data/processed. Please move the same folders that you used on the AWS machine to their respective destinations.
-3. Run `python gui.py` to open the GUI to view predictions. Choose your matched seal by clicking "Check" on the corresponding seal or "No Match"
+4. Run `python gui.py` to open the GUI to view predictions. Choose your matched seal by clicking "Check" on the corresponding seal or "No Match"
 if you think there is no match. Save your result by clicking "Save", you can view a summary of your choice by clicking "Save & View Summary".
 When you are absolutely certain with your choices, you can click "Save & Merge" to merge your probe to your database. This is not a reversible action, 
 you might have to manually move the photos if you change your mind.
 Your updated databased is the one in ./data/processed.
-4. When done, close the virtual environment with `deactivate`
+5. When done, close the terminal
 
 # Additional Info:
 1. SealNet: https://github.com/zbirenbaum/SealFaceRecognition
