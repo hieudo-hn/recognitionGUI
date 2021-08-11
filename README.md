@@ -19,8 +19,9 @@ git clone https://github.com/hieudo-hn/recognitionGUI.git
 5. On the terminal, run `cd ~/Desktop/recognitionGUI`
 6. Create a virtual environment by running:
 `python3 -m venv py39`
-7. Install the dependency with `pip install -r requirements.txt`.
-8. We want our pathing to be similar to data pathing in https://github.com/zbirenbaum/SealFaceRecognition, so let's make a data folder by running:
+7. Run `source ./py39/bin/activate` to activate the virtual environment
+8. Install the dependency with `pip install -r requirements.txt`.
+9. We want our pathing to be similar to data pathing in https://github.com/zbirenbaum/SealFaceRecognition, so let's make a data folder by running:
 ```
 mkdir data
 mkdir data/processed
