@@ -40,7 +40,7 @@ class Menubar(ttk.Frame):
     def on_merge(self):
         # Check for potential naming error
         for probe, predictions in self.gui.prediction.items():
-            if predictions[1] == NO_MATCH:
+            if predictions is not None and predictions[1] == NO_MATCH:
                 label = probe[probe.rfind('/') + 1:]
                 destination = os.path.join(galleryDir, label)
                 # Prediction is no_match but have a seal with the same name in gallery
@@ -313,7 +313,10 @@ class GUI(ttk.Frame):
         for i in range(len(curProbeImgWidget)):
             self.probeFrameDict[(i, 0)].configure(image=curProbeImgWidget[i])
             self.probeFrameDict[(i, 0)].image = curProbeImgWidget[i]
-
+        for i in range(len(curProbeImgWidget), self.maxPhotos):
+            self.probeFrameDict[(i, 0)].configure(image=None)
+            self.probeFrameDict[(i, 0)].image = None
+            
         # Loading Rank-5
         curRankPred = [[] for _ in range(self.rank)]
         for i in range(self.rank):
@@ -326,9 +329,11 @@ class GUI(ttk.Frame):
             self.galleryFrameDict[(
                 2*i, 1)].configure(text='Score: {:.3f}'.format(curGalScore))
             for j in range(len(curRankPred[i])):
-                self.galleryFrameDict[(2*i+1, j+2)
-                                      ].configure(image=curRankPred[i][j])
+                self.galleryFrameDict[(2*i+1, j+2)].configure(image=curRankPred[i][j])
                 self.galleryFrameDict[(2*i+1, j+2)].image = curRankPred[i][j]
+            for j in range(len(curRankPred[i]), self.maxPhotos):
+                self.galleryFrameDict[(2*i+1, j+2)].configure(image=None)
+                self.galleryFrameDict[(2*i+1, j+2)].image = None
 
             # Load Buttons
             if (self.prediction[curProbe] is not None and self.prediction[curProbe][0] == i):
