@@ -1,6 +1,6 @@
 import tkinter
 from tkinter import ttk
-from PIL import ImageTk
+from PIL import Image, ImageTk
 import json
 import abc
 import os
@@ -10,13 +10,15 @@ NO_MATCH = 'No Match'
 match_result_file = './match.txt'
 original_result_file = 'result.json'
 galleryDir = './data/processed'
+SIZE = (112, 112)
+COLOR = 'gray90'
 
-class Menubar(ttk.Frame):
+class Menubar(tkinter.Frame):
     """Builds a menu bar for the top of the main window"""
 
     def __init__(self, parent, gui, *args, **kwargs):
         ''' Constructor'''
-        ttk.Frame.__init__(self, parent, *args, **kwargs)
+        tkinter.Frame.__init__(self, parent, *args, **kwargs)
         self.root = parent
         self.gui = gui
         self.init_menubar()
@@ -94,13 +96,13 @@ class Menubar(ttk.Frame):
 
         self.root.config(menu=self.menubar)
 
-class Window(ttk.Frame):
+class Window(tkinter.Frame):
     """Abstract base class for a popup window"""
     __metaclass__ = abc.ABCMeta
 
     def __init__(self, parent, *args, **kwargs):
         ''' Constructor '''
-        ttk.Frame.__init__(self, parent)
+        tkinter.Frame.__init__(self, parent)
         self.parent = parent
         # Disallows window resizing
         self.parent.resizable(width=False, height=False)
@@ -173,11 +175,11 @@ class SameNameErrorWindow(Window):
         self.error_label = ttk.Label(self.parent, text=text, wraplength=120)
         self.error_label.pack(padx=15, pady=15)
 
-class GUI(ttk.Frame):
+class GUI(tkinter.Frame):
     """Main GUI class"""
 
     def __init__(self, parent, *args, **kwargs):
-        ttk.Frame.__init__(self, parent, *args, **kwargs)
+        tkinter.Frame.__init__(self, parent, *args, **kwargs)
         self.root = parent
         self.data = json.load(open(original_result_file))
         self.probelabel = list(self.data.keys())  # contains all probe images
@@ -201,17 +203,15 @@ class GUI(ttk.Frame):
 
         # different button styles
         self.style = ttk.Style()
-        self.style.configure('TButton', foreground='black',
-                             borderwidth=1, focusthickness=3, focuscolor='none')
         self.style.configure("Selected.TButton", foreground="green")
         self.style.configure("Unselected.TButton", foreground="black")
         self.style.configure("NoMatch.TButton", foreground="red")
-
+        
         # Menu Bar
         self.menubar = Menubar(self.root, self)
 
         # Button Bar: for Previous and Next
-        self.buttonBar = ttk.Frame(self)
+        self.buttonBar = tkinter.Frame(self)
         self.buttonBar.grid(row=0, column=0, pady=15)
 
         self.buttonBarDict = {}  # to easily access elements in buttonBar Fram
@@ -224,7 +224,7 @@ class GUI(ttk.Frame):
             self.buttonBarDict[(x, y)].grid(row=x, column=y, padx=30, pady=5)
 
         # Main Frame
-        self.mainFrame = ttk.Frame(self)
+        self.mainFrame = tkinter.Frame(self)
         self.mainFrame.grid(row=1, column=0)
 
         # Add Probe and Label title
@@ -239,7 +239,7 @@ class GUI(ttk.Frame):
         probeFrame.grid(row=1, column=0, padx=15, pady=15)
         self.probeFrameDict = {}
         for i in range(self.maxPhotos):
-            self.probeFrameDict[(i, 0)] = ttk.Label(probeFrame, image=None)
+            self.probeFrameDict[(i, 0)] = ttk.Label(probeFrame, image='')
             self.probeFrameDict[(i, 0)].grid(row=i, column=0, padx=10, pady=10)
         # Add Gallery Frame
         galleryFrame = tkinter.Frame(
@@ -263,7 +263,7 @@ class GUI(ttk.Frame):
             # Add example photos for each rank
             for j in range(self.maxPhotos):
                 self.galleryFrameDict[(2*i+1, j+2)
-                                      ] = ttk.Label(galleryFrame, image=None)
+                                      ] = ttk.Label(galleryFrame, image='')
                 self.galleryFrameDict[(
                     2*i+1, j+2)].grid(row=2*i+1, column=j+2, padx=5, pady=5)
 
@@ -274,7 +274,7 @@ class GUI(ttk.Frame):
                                                                 column=self.maxPhotos+2, rowspan=2, padx=(15, 0))
 
         # Add No-Match Button
-        noMatchButtonFrame = ttk.Frame(self.mainFrame)
+        noMatchButtonFrame = tkinter.Frame(self.mainFrame)
         noMatchButtonFrame.grid(row=1, column=2, rowspan=self.rank)
         self.mainFrameDict["noMatchButton"] = ttk.Button(
             noMatchButtonFrame, text=NO_MATCH, style="Unselected.TButton", command=self.no_match)
@@ -294,7 +294,9 @@ class GUI(ttk.Frame):
         lstdir = os.listdir(dir)
         while (idx < len(lstdir) and count < self.maxPhotos):
             if (lstdir[idx].endswith(('.jpeg', '.png', '.jpg', '.JPG'))):
-                res.append(os.path.join(dir, lstdir[idx]))
+                image = Image.open(os.path.join(dir, lstdir[idx]))
+                image = image.resize(SIZE, Image.ANTIALIAS)
+                res.append(ImageTk.PhotoImage(image))
                 count += 1
             idx += 1
         return res
@@ -307,23 +309,19 @@ class GUI(ttk.Frame):
             text=curProbe[curProbe.rfind('/')+1:])
 
         # Loading Probes
-        probeImages = self.getPhotosFromDir(curProbe)
-        curProbeImgWidget = [ImageTk.PhotoImage(
-            file=image) for image in probeImages]
+        curProbeImgWidget = self.getPhotosFromDir(curProbe)
         for i in range(len(curProbeImgWidget)):
             self.probeFrameDict[(i, 0)].configure(image=curProbeImgWidget[i])
             self.probeFrameDict[(i, 0)].image = curProbeImgWidget[i]
         for i in range(len(curProbeImgWidget), self.maxPhotos):
-            self.probeFrameDict[(i, 0)].configure(image=None)
+            self.probeFrameDict[(i, 0)].configure(image='')
             self.probeFrameDict[(i, 0)].image = None
             
         # Loading Rank-5
         curRankPred = [[] for _ in range(self.rank)]
         for i in range(self.rank):
             curGal, curGalScore = self.data[curProbe]['scores'][i][0], self.data[curProbe]['scores'][i][1]
-            galImages = self.getPhotosFromDir(curGal)
-            curRankPred[i] = [ImageTk.PhotoImage(
-                file=image) for image in galImages]
+            curRankPred[i] = self.getPhotosFromDir(curGal)
             self.galleryFrameDict[(
                 2*i, 2)].configure(text=curGal[curGal.rfind('/')+1:])
             self.galleryFrameDict[(
@@ -332,7 +330,7 @@ class GUI(ttk.Frame):
                 self.galleryFrameDict[(2*i+1, j+2)].configure(image=curRankPred[i][j])
                 self.galleryFrameDict[(2*i+1, j+2)].image = curRankPred[i][j]
             for j in range(len(curRankPred[i]), self.maxPhotos):
-                self.galleryFrameDict[(2*i+1, j+2)].configure(image=None)
+                self.galleryFrameDict[(2*i+1, j+2)].configure(image='')
                 self.galleryFrameDict[(2*i+1, j+2)].image = None
 
             # Load Buttons

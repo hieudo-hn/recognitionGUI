@@ -4,8 +4,9 @@ This is the GUI for SealNet.
 
 # Prerequisite (Only do this once)
 
-1. You need Python version 3.8 and above. Open the terminal and check if you have Python/your current version of python by running `python3 -V`. 
-If you don't have Python 3.8 or above, you can download Python 3.9 from here: https://www.python.org/downloads/. 
+1. Install python 3.8.10: https://www.python.org/downloads/release/python-3810/
+MacOS: Click MacOS 64-bit Intel installer
+Window: Click Window Installer 64-bit
 Then install python3.9-tk with `brew install python-tk@3.9`
 
 2. Clone the repository into your desktop by running:
@@ -18,8 +19,8 @@ git clone https://github.com/hieudo-hn/recognitionGUI.git
 4. Move the result.json file to this directory named recognitionGUI in your Desktop.
 5. On the terminal, run `cd ~/Desktop/recognitionGUI`
 6. Create a virtual environment by running:
-`python3 -m venv py39`
-7. Run `source ./py39/bin/activate` to activate the virtual environment
+`python3 -m venv py38`
+7. Run `source ./py38/bin/activate` to activate the virtual environment
 8. Install the dependency with `pip install -r requirements.txt`.
 9. We want our pathing to be similar to data pathing in https://github.com/zbirenbaum/SealFaceRecognition, so let's make a data folder by running:
 ```
@@ -31,7 +32,7 @@ mkdir data/probe
 # Display the GUI
 
 1. Assess this repository from the terminal by running `cd ~/Desktop/recognitionGUI`, then run `git pull` to pull any software updates.
-2. Run `source ./py39/bin/activate` to activate the virtual environment
+2. Run `source ./py38/bin/activate` to activate the virtual environment
 3. [Ignore this step if your photos are already in their respective data folder]
 Your probe photos should be in ./data/probe and your gallery (database) should be in ./data/processed. Please move the same folders that you used on the AWS machine to their respective destinations.
 4. Run `python gui.py` to open the GUI to view predictions. Choose your matched seal by clicking "Check" on the corresponding seal or "No Match"
