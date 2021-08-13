@@ -7,8 +7,8 @@ import os
 import shutil
 
 NO_MATCH = 'No Match'
-match_result_file = './match.txt'
-original_result_file = 'result.json'
+match_result_file = './match.json'
+original_result_file = './result.json'
 galleryDir = './data/processed'
 SIZE = (112, 112)
 COLOR = 'gray90'
@@ -33,10 +33,8 @@ class Menubar(tkinter.Frame):
 
     # this function saves the result to a text file
     def on_save(self):
-        with open(match_result_file, 'w') as match:
-            for probe, predictions in self.gui.prediction.items():
-                prediction = "" if predictions is None else predictions[1]
-                match.write(probe + ' ' + prediction + '\n')
+        out_file = open(match_result_file, 'w')
+        json.dump(self.gui.prediction, out_file)
 
     # this function will merge your prediction to the database
     def on_merge(self):
@@ -184,8 +182,11 @@ class GUI(tkinter.Frame):
         self.data = json.load(open(original_result_file))
         self.probelabel = list(self.data.keys())  # contains all probe images
         self.prediction = {}
-        for label in self.probelabel:
-            self.prediction[label] = None
+        if (os.path.exists(match_result_file)):
+            self.prediction = json.load(open(match_result_file))
+        else:
+            for label in self.probelabel:
+                self.prediction[label] = None
         self.current = 0
         self.maxPhotos = 5
         self.rank = 5
