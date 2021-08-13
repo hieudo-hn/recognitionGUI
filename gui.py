@@ -155,9 +155,9 @@ class SummaryWindow(Window):
             probe = probe[probe.rfind('/')+1:]
             prediction = "" if predictions is None else predictions[1][predictions[1].rfind('/') + 1:]
             if prediction == NO_MATCH:
-                mylist.insert(tkinter.END, str(probe) + " does not have a match")
+                mylist.insert(tkinter.END, "    " + str(probe) + " does not have a match")
             else:
-                mylist.insert(tkinter.END, str(probe) + " is matched with " + str(prediction))
+                mylist.insert(tkinter.END, "    " + str(probe) + " is matched with " + str(prediction))
                 
         mylist.pack( side = tkinter.LEFT, fill = tkinter.BOTH ) 
         verticalScrollbar.config( command = mylist.yview ) 
