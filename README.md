@@ -28,6 +28,7 @@ mkdir data && mkdir data/processed && mkdir data/processed/train && mkdir data/p
 ```
 
 # Display the GUI
+Remember to move the result.json file from the Downloads folder to the recognitionGUI folder in your Desktop before executing the next steps:
 
 1. Assess this repository from the terminal by running `cd ~/Desktop/recognitionGUI`, then run `git pull` to pull any software updates.
 2. Run `source ./py39/bin/activate` to activate the virtual environment
