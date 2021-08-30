@@ -9,7 +9,7 @@ import shutil
 NO_MATCH = 'No Match'
 match_result_file = './match.json'
 original_result_file = './result.json'
-galleryDir = './data/processed'
+galleryDir = './data/processed/train'
 SIZE = (112, 112)
 COLOR = 'gray90'
 
@@ -62,6 +62,7 @@ class Menubar(tkinter.Frame):
                 photoPath = os.path.join(probe, photo)
                 destinationPath = os.path.join(prediction, photo)
                 shutil.copyfile(photoPath, destinationPath)
+        
     
     def on_save_and_merge(self):
         self.on_save()
@@ -172,7 +173,6 @@ class SameNameErrorWindow(Window):
 
         self.error_label = ttk.Label(self.parent, text=text, wraplength=120)
         self.error_label.pack(padx=15, pady=15)
-
 class GUI(tkinter.Frame):
     """Main GUI class"""
 
@@ -195,8 +195,7 @@ class GUI(tkinter.Frame):
 
     def init_gui(self):
         self.root.title('SealNet')
-        self.root.geometry("1300x900")
-        self.grid(column=0, row=0, sticky='nsew')
+        self.grid(column=0, row=0, sticky='nw')
         self.root.grid_columnconfigure(0, weight=1)
         self.root.grid_rowconfigure(0, weight=1)
         # Disables ability to tear menu bar into own window
@@ -207,12 +206,22 @@ class GUI(tkinter.Frame):
         self.style.configure("Selected.TButton", foreground="green")
         self.style.configure("Unselected.TButton", foreground="black")
         self.style.configure("NoMatch.TButton", foreground="red")
-        
+
         # Menu Bar
         self.menubar = Menubar(self.root, self)
 
+        # Add a canvas in that frame
+        canvas = tkinter.Canvas(self.root)
+        canvas.grid(row=0, column=0, sticky="news")
+
+        # Link a scrollbar to the canvas
+        vsb = tkinter.Scrollbar(self.root, orient="vertical", command=canvas.yview)
+        vsb.grid(row=0, column=1, sticky='ns')
+        canvas.configure(yscrollcommand=vsb.set)
+        canvas.config(scrollregion=canvas.bbox("all"))
+
         # Button Bar: for Previous and Next
-        self.buttonBar = tkinter.Frame(self)
+        self.buttonBar = tkinter.Frame(canvas)
         self.buttonBar.grid(row=0, column=0, pady=15)
 
         self.buttonBarDict = {}  # to easily access elements in buttonBar Fram
@@ -225,7 +234,7 @@ class GUI(tkinter.Frame):
             self.buttonBarDict[(x, y)].grid(row=x, column=y, padx=30, pady=5)
 
         # Main Frame
-        self.mainFrame = tkinter.Frame(self)
+        self.mainFrame = tkinter.Frame(canvas)
         self.mainFrame.grid(row=1, column=0)
 
         # Add Probe and Label title
@@ -386,14 +395,14 @@ class GUI(tkinter.Frame):
     def no_match(self):
         currentProbe = self.probelabel[self.current]
         if self.prediction[currentProbe] == None:
-            self.prediction[currentProbe] = (-1, "NoMatch")
+            self.prediction[currentProbe] = (-1, NO_MATCH)
             self.mainFrameDict["noMatchButton"].configure(
                 style="NoMatch.TButton")
         elif self.prediction[currentProbe][0] >= 0:
             prevIndex = self.prediction[currentProbe][0]
             self.galleryFrameDict[(2*prevIndex, self.maxPhotos+2)
                                   ].configure(style="Unselected.TButton")
-            self.prediction[currentProbe] = (-1, "NoMatch")
+            self.prediction[currentProbe] = (-1, NO_MATCH)
             self.mainFrameDict["noMatchButton"].configure(
                 style="NoMatch.TButton")
         else:
