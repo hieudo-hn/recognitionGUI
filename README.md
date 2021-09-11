@@ -32,7 +32,7 @@ mkdir data && mkdir data/processed && mkdir data/processed/train && mkdir data/p
 2. Assess this repository from the terminal by running `cd ~/Desktop/recognitionGUI`, then run `git pull` to pull any software updates.
 3. Run `source ./py39/bin/activate` to activate the virtual environment
 4. [Ignore this step if your photos are already in their respective data folder]
-Your probe photos should be in ./data/probe and your gallery (database) should be in ./data/processed. Please move the same folders that you used on the AWS machine to their respective destinations.
+Your probe photos should be in ./data/processed/probe and your gallery (database) should be in ./data/processed/train. Please move the same folders that you used on the AWS machine to their respective destinations.
 5. Before opening the GUI, you should know about the match.json file:
     + match.json saves your previous predictions if you have used the GUI before. 
     + If you are loading a new probe data, make sure to delete the match.json file if it is present.
