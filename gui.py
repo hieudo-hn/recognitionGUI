@@ -1,6 +1,6 @@
 import tkinter
 from tkinter import ttk
-from PIL import Image, ImageTk
+from PIL import Image, ImageTk, ImageDraw
 import json
 import abc
 import os
@@ -10,7 +10,6 @@ NO_MATCH = 'No Match'
 match_result_file = './match.json'
 original_result_file = './result.json'
 galleryDir = './data/processed/train'
-SIZE = (112, 112)
 COLOR = 'gray90'
 
 class Menubar(tkinter.Frame):
@@ -177,6 +176,8 @@ class GUI(tkinter.Frame):
     """Main GUI class"""
 
     def __init__(self, parent, *args, **kwargs):
+        s = parent.winfo_screenheight()//11
+        self.size = (s, s)
         tkinter.Frame.__init__(self, parent, *args, **kwargs)
         self.root = parent
         self.data = json.load(open(original_result_file))
@@ -213,12 +214,6 @@ class GUI(tkinter.Frame):
         # Add a canvas in that frame
         canvas = tkinter.Canvas(self.root)
         canvas.grid(row=0, column=0, sticky="news")
-
-        # Link a scrollbar to the canvas
-        vsb = tkinter.Scrollbar(self.root, orient="vertical", command=canvas.yview)
-        vsb.grid(row=0, column=1, sticky='ns')
-        canvas.configure(yscrollcommand=vsb.set)
-        canvas.config(scrollregion=canvas.bbox("all"))
 
         # Button Bar: for Previous and Next
         self.buttonBar = tkinter.Frame(canvas)
@@ -301,14 +296,36 @@ class GUI(tkinter.Frame):
         res = []
         count = 0
         idx = 0
-        lstdir = os.listdir(dir)
-        while (idx < len(lstdir) and count < self.maxPhotos):
-            if (lstdir[idx].endswith(('.jpeg', '.png', '.jpg', '.JPG'))):
-                image = Image.open(os.path.join(dir, lstdir[idx]))
-                image = image.resize(SIZE, Image.ANTIALIAS)
+        # if directory is not found
+        if not os.path.isdir(dir):
+            texts = "Image Not Found"
+            W, H = self.size
+            for text in texts.split(" "):
+                image = Image.new("RGB", self.size, (255, 255, 255))
+                draw = ImageDraw.Draw(image)
+                w, h = draw.textsize(text)
+                draw.text(
+                    ((W-w)/2,(H-h)/2),  # Coordinates
+                    text,
+                    (0, 0, 0)  # Color
+                )
                 res.append(ImageTk.PhotoImage(image))
                 count += 1
-            idx += 1
+        else:
+            lstdir = os.listdir(dir)
+            # load image
+            while (idx < len(lstdir) and count < self.maxPhotos):
+                if (lstdir[idx].endswith(('.jpeg', '.png', '.jpg', '.JPG'))):
+                    image = Image.open(os.path.join(dir, lstdir[idx]))
+                    image = image.resize(self.size, Image.ANTIALIAS)
+                    res.append(ImageTk.PhotoImage(image))
+                    count += 1
+                idx += 1
+            # add blank image
+        while (count < self.maxPhotos):
+            # blank image of fixed size with white background
+            res.append(ImageTk.PhotoImage(Image.new("RGB", self.size, (255, 255, 255))))
+            count += 1    
         return res
 
     # Loading the main frame of the GUI displaying the current probe result
@@ -323,9 +340,6 @@ class GUI(tkinter.Frame):
         for i in range(len(curProbeImgWidget)):
             self.probeFrameDict[(i, 0)].configure(image=curProbeImgWidget[i])
             self.probeFrameDict[(i, 0)].image = curProbeImgWidget[i]
-        for i in range(len(curProbeImgWidget), self.maxPhotos):
-            self.probeFrameDict[(i, 0)].configure(image='')
-            self.probeFrameDict[(i, 0)].image = None
             
         # Loading Rank-5
         curRankPred = [[] for _ in range(self.rank)]
@@ -339,9 +353,6 @@ class GUI(tkinter.Frame):
             for j in range(len(curRankPred[i])):
                 self.galleryFrameDict[(2*i+1, j+2)].configure(image=curRankPred[i][j])
                 self.galleryFrameDict[(2*i+1, j+2)].image = curRankPred[i][j]
-            for j in range(len(curRankPred[i]), self.maxPhotos):
-                self.galleryFrameDict[(2*i+1, j+2)].configure(image='')
-                self.galleryFrameDict[(2*i+1, j+2)].image = None
 
             # Load Buttons
             if (self.prediction[curProbe] is not None and self.prediction[curProbe][0] == i):
